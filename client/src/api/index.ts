@@ -1,6 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
-  : '/api';
+const envApiUrl = (import.meta as any).env?.VITE_API_URL;
+const API_BASE = envApiUrl ? `${envApiUrl.replace(/\/$/, '')}/api` : '/api';
 
 export const getAuthToken = (): string | null => {
   return localStorage.getItem('medicare_token');
