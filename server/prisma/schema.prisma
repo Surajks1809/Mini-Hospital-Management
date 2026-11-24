@@ -1,0 +1,241 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  STAFF
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DoctorStatus {
+  AVAILABLE
+  IN_CONSULTATION
+  ON_LEAVE
+  EMERGENCY_ONLY
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  PARTIALLY_PAID
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CREDIT_CARD
+  DEBIT_CARD
+  INSURANCE
+  NET_BANKING
+}
+
+enum ItemCategory {
+  CONSULTATION
+  MEDICINE
+  LAB
+  ROOM
+  PROCEDURE
+  OTHER
+}
+
+model Hospital {
+  id               String   @id @default(cuid())
+  name             String
+  tagline          String   @default("Excellence in Healthcare, Compassion in Healing")
+  address          String   @default("Plot 42, Health City, Sector 18, Medical Enclave, New Delhi - 110001")
+  phone            String   @default("+91 (011) 4567-8900")
+  email            String   @default("support@medicarehms.org")
+  emergencyContact String   @default("+91 98765 43210")
+  website          String   @default("www.medicarehms.org")
+  currency         String   @default("₹")
+  taxRate          Float    @default(5.0)
+  gstNumber        String   @default("07AAAAA0000A1Z5")
+  invoicePrefix    String   @default("INV-2026-")
+  patientPrefix    String   @default("MED-P-2026-")
+  hospitalLogo     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  users            User[]
+  patients         Patient[]
+  doctors          Doctor[]
+  appointments     Appointment[]
+  invoices         Invoice[]
+}
+
+model User {
+  id         String    @id @default(cuid())
+  hospitalId String
+  hospital   Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  email      String    @unique
+  password   String
+  name       String
+  role       Role      @default(ADMIN)
+  phone      String?
+  avatar     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([hospitalId])
+}
+
+model Patient {
+  id               String        @id @default(cuid())
+  hospitalId       String
+  hospital         Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patientId        String
+  fullName         String
+  gender           Gender
+  dateOfBirth      DateTime
+  age              Int
+  phone            String
+  email            String?
+  address          String
+  bloodGroup       String        // e.g. "O+", "A+", "B+", "AB+", "O-", etc.
+  emergencyContact String
+  medicalHistory   String?       @default("No significant past history recorded.")
+  allergies        String?       @default("No known drug allergies.")
+  registrationDate DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  appointments     Appointment[]
+  invoices         Invoice[]
+
+  @@unique([hospitalId, patientId])
+  @@index([hospitalId])
+  @@index([fullName])
+  @@index([phone])
+}
+
+model Doctor {
+  id                 String         @id @default(cuid())
+  hospitalId         String
+  hospital           Hospital       @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  doctorId           String
+  name               String
+  specialization     String
+  department         String
+  phone              String
+  email              String
+  consultationFee    Float          @default(500.0)
+  availabilityStatus DoctorStatus   @default(AVAILABLE)
+  qualification      String         @default("MBBS, MD")
+  experienceYears    Int            @default(5)
+  roomNumber         String?        @default("OPD-101")
+  avatar             String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  appointments       Appointment[]
+
+  @@unique([hospitalId, doctorId])
+  @@unique([hospitalId, email])
+  @@index([hospitalId])
+  @@index([name])
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  hospitalId      String
+  hospital        Hospital          @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  appointmentId   String
+  patientId       String
+  patient         Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId        String
+  doctor          Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  department      String
+  appointmentDate DateTime
+  appointmentTime String            // e.g. "09:30 AM", "11:00 AM"
+  reasonForVisit  String
+  status          AppointmentStatus @default(SCHEDULED)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([hospitalId, doctorId, appointmentDate, appointmentTime])
+  @@unique([hospitalId, appointmentId])
+  @@index([hospitalId])
+  @@index([appointmentDate])
+}
+
+model Invoice {
+  id                  String        @id @default(cuid())
+  hospitalId          String
+  hospital            Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  invoiceNumber       String
+  patientId           String
+  patient             Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  consultationCharges Float         @default(0.0)
+  medicineCharges     Float         @default(0.0)
+  laboratoryCharges   Float         @default(0.0)
+  otherCharges        Float         @default(0.0)
+  subtotal            Float         @default(0.0)
+  discount            Float         @default(0.0)
+  taxRate             Float         @default(5.0)
+  taxAmount           Float         @default(0.0)
+  grandTotal          Float         @default(0.0)
+  amountPaid          Float         @default(0.0)
+  balanceAmount       Float         @default(0.0)
+  paymentMethod       PaymentMethod @default(CASH)
+  paymentStatus       PaymentStatus @default(PENDING)
+  billingDate         DateTime      @default(now())
+  notes               String?
+  doctorName          String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  items               InvoiceItem[]
+  payments            Payment[]
+
+  @@unique([hospitalId, invoiceNumber])
+  @@index([hospitalId])
+  @@index([patientId])
+  @@index([paymentStatus])
+}
+
+model InvoiceItem {
+  id          String       @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  category    ItemCategory @default(OTHER)
+  quantity    Int          @default(1)
+  unitPrice   Float        @default(0.0)
+  total       Float        @default(0.0)
+  createdAt   DateTime     @default(now())
+
+  @@index([invoiceId])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  invoiceId      String
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount         Float
+  paymentMethod  PaymentMethod @default(CASH)
+  transactionRef String?
+  receivedBy     String?       @default("Accounts Desk")
+  paidAt         DateTime      @default(now())
+  notes          String?
+
+  @@index([invoiceId])
+}
