@@ -2,17 +2,37 @@
   "name": "medicare-hms",
   "version": "1.0.0",
   "description": "MediCare HMS - Premium Commercial Hospital Management System",
+  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
+    "build": "npx prisma generate && npm run build --prefix client",
     "db:start": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_ctl.exe' -D .pgdata -o '-p 5433' -l .pgdata\\server.log start\"",
     "db:stop": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_ctl.exe' -D .pgdata stop\"",
     "db:status": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_ctl.exe' -D .pgdata status\"",
     "db:seed": "cd server && npm run prisma:seed",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install"
   },
+  "dependencies": {
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.16.0"
+  },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.8",
+    "@types/node": "^20.17.19",
+    "@types/pdfkit": "^0.13.9",
+    "concurrently": "^9.1.2",
+    "prisma": "^6.4.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
   }
 }

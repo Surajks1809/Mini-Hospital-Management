@@ -26,7 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health Check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -34,15 +34,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/doctors', doctorRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/reports', reportsRoutes);
-app.use('/api/settings', settingsRoutes);
+// API Routes (supports both direct and serverless rewritten paths)
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/patients', '/patients'], patientRoutes);
+app.use(['/api/doctors', '/doctors'], doctorRoutes);
+app.use(['/api/appointments', '/appointments'], appointmentRoutes);
+app.use(['/api/invoices', '/invoices'], invoiceRoutes);
+app.use(['/api/dashboard', '/dashboard'], dashboardRoutes);
+app.use(['/api/reports', '/reports'], reportsRoutes);
+app.use(['/api/settings', '/settings'], settingsRoutes);
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -53,9 +53,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🏥 MediCare HMS Server running on port ${PORT}`);
-  console.log(`🔗 Health check available at http://localhost:${PORT}/api/health`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🏥 MediCare HMS Server running on port ${PORT}`);
+    console.log(`🔗 Health check available at http://localhost:${PORT}/api/health`);
+  });
+}
 
 export default app;
