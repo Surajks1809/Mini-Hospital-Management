@@ -43,7 +43,7 @@ export const getSettings = async (req: AuthRequest, res: Response) => {
       data: {
         id: hospital.id,
         hospitalName: hospital.name,
-        hospitalLogo: hospital.logo,
+        hospitalLogo: hospital.hospitalLogo,
         tagline: hospital.tagline,
         address: hospital.address,
         phone: hospital.phone,
