@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "build": "npx prisma generate && npm run build --prefix client",
+    "build": "npm run build --prefix client",
     "db:start": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_ctl.exe' -D .pgdata -o '-p 5433' -l .pgdata\\server.log start\"",
     "db:stop": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_ctl.exe' -D .pgdata stop\"",
     "db:status": "powershell -Command \"& 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_ctl.exe' -D .pgdata status\"",

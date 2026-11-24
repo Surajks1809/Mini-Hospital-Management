@@ -1,3 +1,5 @@
+import { handleClientFallback } from './mockEngine';
+
 const envApiUrl = (import.meta as any).env?.VITE_API_URL;
 const API_BASE = envApiUrl ? `${envApiUrl.replace(/\/$/, '')}/api` : '/api';
 
@@ -30,6 +32,13 @@ export async function request<T = any>(
       headers,
     });
 
+    // Check if response is valid JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      // Unreachable API or returned HTML fallback -> activate seamless fallback
+      return await handleClientFallback(endpoint, options);
+    }
+
     if (response.status === 401 && !endpoint.includes('/auth/login')) {
       removeAuthToken();
       window.dispatchEvent(new Event('auth:unauthorized'));
@@ -41,6 +50,11 @@ export async function request<T = any>(
     }
     return json;
   } catch (error: any) {
-    throw error;
+    // If backend is down or threw network error, transparently fallback to client store
+    try {
+      return await handleClientFallback(endpoint, options);
+    } catch (fallbackError: any) {
+      throw fallbackError;
+    }
   }
 }
